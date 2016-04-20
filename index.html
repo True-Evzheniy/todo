@@ -1,112 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ToDo</title>
-  <style>
-    input:checked+input{
-      text-decoration: line-through;
-    }
-    input:checked+input:focus{
-      text-decoration: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>ToDo</title>
+    <style>
+        input:checked + input {
+            text-decoration: line-through;
+        }
+
+        input:checked + input:focus {
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-  <div class="task__field">
+<div class="task__field">
 
-  </div>
-  <div class="task">
-    <input type="checkbox" class="task__check">
-    <input type="text" class="task__input">
-    <button class="task__add">V</button>
-    <button class="task__clear">X</button>
-  </div>
-  <div class="task__filter">
-    <input type="radio" name="filter" id="all"><label for="all">Все</label>
-    <input type="radio" name="filter" id="compleate"><label for="compleate">Выполненные</label>
-    <input type="radio" name="filter" id="active"><label for="active">Активные</label>
-  </div>
-  <template style="dispaly: none">
+</div>
+<div class="task__adder">
     <div class="task">
-      <input type="checkbox" class="task__check">
-      <input type="text" class="task__input">
-      <button class="task__add">V</button>
-      <button class="task__clear">X</button>
+        <input type="checkbox" class="task__check">
+        <input type="text" class="task__input">
+        <button class="task__add">V</button>
+        <button class="task__clear">X</button>
     </div>
-  </template>
-  <script>
-      'use strict';
-      var template = document.querySelector('template');
-      var elementToClone;
-      var field = document.querySelector('.task__field');
+</div>
+<div class="task__filter">
+    <input type="radio" name="filter" id="all" checked><label for="all">Все</label>
+    <input type="radio" name="filter" id="complete"><label for="complete">Выполненные</label>
+    <input type="radio" name="filter" id="active"><label for="active">Активные</label>
+</div>
+<template style="dispaly: none">
+    <div class="task">
+        <input type="checkbox" class="task__check">
+        <input type="text" class="task__input">
+        <button class="task__add">V</button>
+        <button class="task__clear">X</button>
+    </div>
+</template>
+<script>
+    'use strict';
+    var template = document.querySelector('template');
+    var elementToClone;
+    var field = document.querySelector('.task__field');
 
-      // Если нет поддержки браузером берем из DOMa
-      if ('content' in template) {
-          elementToClone = template.content.firstElementChild;
-      } else {
-          elementToClone = template.firstElementChild;
-      }
+    // Если нет поддержки браузером шаблон берем из DOMa
+    if ('content' in template) {
+        elementToClone = template.content.firstElementChild;
+    } else {
+        elementToClone = template.firstElementChild;
+    }
 
-      var exampleData = [{id: 1, text: 'купить хлеб', checked: true},
-          {id: 2, text: 'покрасить небо', checked: false},
-          {id: 3, text: 'съесть французских булок', checked: true}];
+    var data = [{id: 1, text: 'купить хлеб', checked: true},
+        {id: 2, text: 'покрасить небо', checked: false},
+        {id: 3, text: 'съесть французских булок', checked: true}];
 
-      // Функция отрисовки одной задачи
-      function renderTask(obj) {
-          var task = elementToClone.cloneNode(true);
-          task.id = obj.id;
-          var checkbox = task.querySelector('.task__check');
-          var text = task.querySelector('.task__input');
-          if (obj.checked) {
-              checkbox.checked = true;
-          }
-          if (obj.text) {
-              text.value = obj.text;
-          }
-          field.appendChild(task);
-      }
+    // Функция отрисовки одной задачи
+    function renderTask(obj) {
+        var task = elementToClone.cloneNode(true);
+        task.id = obj.id;
+        var checkbox = task.querySelector('.task__check');
+        var text = task.querySelector('.task__input');
+        if (obj.checked) {
+            checkbox.checked = true;
+        }
+        if (obj.text) {
+            text.value = obj.text;
+        }
+        field.appendChild(task);
+    }
 
-      // Функция фильтрации сделанных тасков
-      function sortingCheckedTask(arr) {
-          return arr.filter(function (item) {
-              return item.checked;
-          })
-      }
+    // Функция фильтрации сделанных тасков
+    function sortingCheckedTask(arr) {
+        return arr.filter(function (item) {
+            return item.checked;
+        })
+    }
 
-      // Функция фильтрации несделанных тасков
-      function sortingNoCheckedTask(arr) {
-          return arr.filter(function (item) {
-              return !item.checked;
-          })
-      }
+    // Функция фильтрации несделанных тасков
+    function sortingNoCheckedTask(arr) {
+        return arr.filter(function (item) {
+            return !item.checked;
+        })
+    }
 
-      // Рисуем массив тасков
-      function renderTasks(arr) {
-          arr.forEach(function (item) {
-              renderTask(item);
-          });
-      }
+    // Рисуем массив тасков
+    function renderTasks(arr) {
+        arr.forEach(function (item) {
+            renderTask(item);
+        });
+    }
 
-      // Получаем фильтр
-      function getFilter() {
-          var btns = document.querySelectorAll('input[type=radio]');
-          var id;
-          [].forEach.call(btns, function (item) {
-              if (item.checked) id = item.id;
-          });
-          return id;
-      }
+    // Получаем фильтр
+    function getFilter() {
+        var btns = document.querySelectorAll('input[type=radio]');
+        var id;
+        [].forEach.call(btns, function (item) {
+            if (item.checked) id = item.id;
+        });
+        return id;
+    }
 
-      function filter(nameFilter) {
-          switch (nameFilter) {
-              case 'all':
+    // Фильтруем масиив одним из фильтров
+    function filter(arr, nameFilter) {
+        var arrToFilter = arr.slice('');
+        switch (nameFilter) {
+            case 'all':
+                return arrToFilter;
+            case 'complete':
+                return sortingCheckedTask(arrToFilter);
+            case 'active':
+                return sortingNoCheckedTask(arrToFilter);
+        }
+    }
 
+    // Рисуем поле тасков
+    function renderField(data) {
+        // Сперва чистим
+        field.innerHTML = '';
+        // Смотрим, какой фильтр выбран
+        var filterName = getFilter();
+        // Фильтруем им
+        var filtredArr = filter(data, filterName);
+        // Рисуем что получилось
+        renderTasks(filtredArr);
+    }
 
-          }
-      }
-      renderTasks(exampleData);
+    // Удаление таски
+    function deleteTask(id) {
+        var newData = data.filter(function (item) {
+            return item.id !== +id;
+        })
+        data = newData;
+    }
 
-  </script>
+    // Редактирование таски
+    function editTask(id, text, checked) {
+        data.forEach(function (item) {
+            if (item.id === +id) {
+                item.text = text;
+                item.checked = checked;
+            }
+        })
+    }
+
+    // Добавление таски
+    function addTask(text, checked) {
+        data.push({id: Date.now(), text: text, checked: checked});
+    }
+
+    renderField(data);
+
+    var taskFilter = document.querySelector('.task__filter');
+    taskFilter.addEventListener('click', function () {
+        renderField(data);
+    });
+
+    field.addEventListener('click', function (evt) {
+        var target = evt.target;
+        if (target.classList.contains('task__clear')) {
+            while (!target.classList.contains('task')) {
+                target = target.parentNode;
+            }
+            deleteTask(target.id);
+            renderField(data);
+        }
+    });
+
+    field.addEventListener('click', function (evt) {
+        var target = evt.target;
+        if (target.classList.contains('task__add')) {
+            while (!target.classList.contains('task')) {
+                target = target.parentNode;
+            }
+            var checkbox = target.querySelector('.task__check');
+            var input = target.querySelector('.task__input');
+            editTask(target.id, input.value, checkbox.checked);
+            renderField(data);
+        }
+    });
+
+    var adder = document.querySelector('.task__adder');
+    adder.addEventListener('click', function(evt) {
+        var target = evt.target;
+        if(target.classList.contains('task__add')) {
+            while (!target.classList.contains('task')) {
+                target = target.parentNode;
+            }
+            var checkbox = target.querySelector('.task__check');
+            var input = target.querySelector('.task__input');
+            if(input) {
+                addTask(input.value, checkbox.checked);
+                input.value = '';
+                renderField(data);
+            }
+        }
+    });
+
+</script>
 </body>
 </html>
