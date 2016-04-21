@@ -167,6 +167,7 @@
         }
     });
 
+    //
     field.addEventListener('click', function (evt) {
         var target = evt.target;
         if (target.classList.contains('task__add')) {
@@ -180,6 +181,7 @@
         }
     });
 
+    // Обработчики на блок добавления тасков
     var adder = document.querySelector('.task__adder');
     adder.addEventListener('click', function(evt) {
         var target = evt.target;
@@ -195,7 +197,39 @@
                 renderField(data);
             }
         }
+        if(target.classList.contains('task__clear')) {
+            while (!target.classList.contains('task')) {
+                target = target.parentNode;
+            }
+            var input = target.querySelector('.task__input');
+            input.value = '';
+        }
     });
+    // Сохраняю состояние на чекбоксах
+    field.addEventListener('click', function (evt) {
+        var target = evt.target;
+        if (target.classList.contains('task__check')) {
+            while (!target.classList.contains('task')) {
+                target = target.parentNode;
+            }
+            var checkbox = target.querySelector('.task__check');
+            var input = target.querySelector('.task__input');
+            editTask(target.id, input.value, checkbox.checked);
+            renderField(data);
+        }
+    });
+
+    // Рисую стандарные значения при потере фокуса, делегирование на невсплывающе событитие ^_^
+    field.addEventListener('blur', function (evt) {
+        var target = evt.target;
+        if (target.classList.contains('task__input')) {
+            function renderWrap() {
+                renderField(data);
+            }
+            // Задержка, чтобы успеть сохранить в модель значения при клике по кнопкам, т.к. событие потери фокуса всегда первым происходит
+            setTimeout(renderWrap, 100);
+        }
+    }, true);
 
 </script>
 </body>
