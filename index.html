@@ -11,10 +11,45 @@
         input:checked + input:focus {
             text-decoration: none;
         }
+
+        .task__list .task__input {
+            border-color: transparent;
+        }
+
+        .task--focused .task__input {
+            border-color: initial;
+        }
+
+        .task__save {
+            visibility: hidden;
+        }
+
+        .task--focused .task__save {
+            visibility: visible;
+        }
+
+        .task--focused .task__add {
+            visibility: visible;
+        }
+
+        .task--focused .task__clear {
+            visibility: visible;
+        }
+
+        .task__clear {
+            visibility: hidden;
+        }
+
+        .task__add {
+            visibility: hidden;
+        }
+
+
+
     </style>
 </head>
 <body>
-<div class="task__field">
+<div class="task__list">
 
 </div>
 <div class="task__adder">
@@ -34,203 +69,230 @@
     <div class="task">
         <input type="checkbox" class="task__check">
         <input type="text" class="task__input">
-        <button class="task__add">V</button>
-        <button class="task__clear">X</button>
+        <button class="task__save">V</button>
+        <button class="task__remove">X</button>
     </div>
 </template>
 <script>
     'use strict';
-    var template = document.querySelector('template');
-    var elementToClone;
-    var field = document.querySelector('.task__field');
+    (function() {
+        var taskTemplate = getTaskTemplate();
+        var taskList = document.querySelector('.task__list');
+        var adder = document.querySelector('.task__adder');
+        var taskFilter = document.querySelector('.task__filter');
+        var data = [{id: 1, text: 'купить хлеб', checked: true},
+            {id: 2, text: 'покрасить небо', checked: false},
+            {id: 3, text: 'съесть французских булок', checked: true}];
 
-    // Если нет поддержки браузером шаблон берем из DOMa
-    if ('content' in template) {
-        elementToClone = template.content.firstElementChild;
-    } else {
-        elementToClone = template.firstElementChild;
-    }
+        taskList.addEventListener('click', removeTaskHandler );
 
-    var data = [{id: 1, text: 'купить хлеб', checked: true},
-        {id: 2, text: 'покрасить небо', checked: false},
-        {id: 3, text: 'съесть французских булок', checked: true}];
+        //on('click', taskList, 'task__remove', removeTaskHandler);
 
-    // Функция отрисовки одной задачи
-    function renderTask(obj) {
-        var task = elementToClone.cloneNode(true);
-        task.id = obj.id;
-        var checkbox = task.querySelector('.task__check');
-        var text = task.querySelector('.task__input');
-        if (obj.checked) {
-            checkbox.checked = true;
-        }
-        if (obj.text) {
-            text.value = obj.text;
-        }
-        field.appendChild(task);
-    }
+        taskList.addEventListener('click', saveEditingTaskHandler );
 
-    // Функция фильтрации сделанных тасков
-    function sortingCheckedTask(arr) {
-        return arr.filter(function (item) {
-            return item.checked;
-        })
-    }
+        taskList.addEventListener('click', checkTaskHandler);
 
-    // Функция фильтрации несделанных тасков
-    function sortingNoCheckedTask(arr) {
-        return arr.filter(function (item) {
-            return !item.checked;
-        })
-    }
+        taskList.addEventListener('blur', revertValueTaskOfBlurHandler, true);
 
-    // Рисуем массив тасков
-    function renderTasks(arr) {
-        arr.forEach(function (item) {
-            renderTask(item);
-        });
-    }
+        taskList.addEventListener('focus', addClassFocusHandler, true);
 
-    // Получаем фильтр
-    function getFilter() {
-        var btns = document.querySelectorAll('input[type=radio]');
-        var id;
-        [].forEach.call(btns, function (item) {
-            if (item.checked) id = item.id;
-        });
-        return id;
-    }
+        adder.addEventListener('click', addNewTaskHandler);
 
-    // Фильтруем масиив одним из фильтров
-    function filter(arr, nameFilter) {
-        var arrToFilter = arr.slice('');
-        switch (nameFilter) {
-            case 'all':
-                return arrToFilter;
-            case 'complete':
-                return sortingCheckedTask(arrToFilter);
-            case 'active':
-                return sortingNoCheckedTask(arrToFilter);
-        }
-    }
+        adder.addEventListener('click', clearInputFieldHandler);
 
-    // Рисуем поле тасков
-    function renderField(data) {
-        // Сперва чистим
-        field.innerHTML = '';
-        // Смотрим, какой фильтр выбран
-        var filterName = getFilter();
-        // Фильтруем им
-        var filtredArr = filter(data, filterName);
-        // Рисуем что получилось
-        renderTasks(filtredArr);
-    }
+        taskFilter.addEventListener('click', showFilteredTaskHandler);
 
-    // Удаление таски
-    function deleteTask(id) {
-        var newData = data.filter(function (item) {
-            return item.id !== +id;
-        })
-        data = newData;
-    }
+        adder.addEventListener('focus', addClassFocusHandler, true);
 
-    // Редактирование таски
-    function editTask(id, text, checked) {
-        data.forEach(function (item) {
-            if (item.id === +id) {
-                item.text = text;
-                item.checked = checked;
+        adder.addEventListener('blur', removeClassFocusHandler, true);
+
+
+        // HANDLERS
+        function removeTaskHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__remove')) {
+                target = getParentByClassName(target, 'task');
+                deleteTask(target.id);
+                renderTaskList(data);
             }
-        })
-    }
-
-    // Добавление таски
-    function addTask(text, checked) {
-        data.push({id: Date.now(), text: text, checked: checked});
-    }
-
-    renderField(data);
-
-    var taskFilter = document.querySelector('.task__filter');
-    taskFilter.addEventListener('click', function () {
-        renderField(data);
-    });
-
-    field.addEventListener('click', function (evt) {
-        var target = evt.target;
-        if (target.classList.contains('task__clear')) {
-            while (!target.classList.contains('task')) {
-                target = target.parentNode;
-            }
-            deleteTask(target.id);
-            renderField(data);
         }
-    });
 
-    //
-    field.addEventListener('click', function (evt) {
-        var target = evt.target;
-        if (target.classList.contains('task__add')) {
-            while (!target.classList.contains('task')) {
-                target = target.parentNode;
+        function saveEditingTaskHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__save')) {
+                target = getParentByClassName(target, 'task');
+                var checkbox = target.querySelector('.task__check');
+                var input = target.querySelector('.task__input');
+                editTask(target.id, input.value, checkbox.checked);
+                renderTaskList(data);
             }
-            var checkbox = target.querySelector('.task__check');
-            var input = target.querySelector('.task__input');
-            editTask(target.id, input.value, checkbox.checked);
-            renderField(data);
         }
-    });
 
-    // Обработчики на блок добавления тасков
-    var adder = document.querySelector('.task__adder');
-    adder.addEventListener('click', function(evt) {
-        var target = evt.target;
-        if(target.classList.contains('task__add')) {
-            while (!target.classList.contains('task')) {
-                target = target.parentNode;
+        function revertValueTaskOfBlurHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__input')) {
+                console.log('22');
+                setTimeout(function(){renderTaskList(data);}, 150);
             }
-            var checkbox = target.querySelector('.task__check');
-            var input = target.querySelector('.task__input');
-            if(input) {
-                addTask(input.value, checkbox.checked);
+        }
+
+        function addClassFocusHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__input')) {
+                target = getParentByClassName(target, 'task');
+                target.classList.add('task--focused');
+            }
+        }
+
+        function removeClassFocusHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__input')) {
+                target = getParentByClassName(target, 'task');
+                setTimeout(function(){target.classList.remove('task--focused')}, 150);
+            }
+        }
+
+        function showFilteredTaskHandler() {
+            renderTaskList(data);
+        }
+
+        function addNewTaskHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__add')) {
+                target = getParentByClassName(target, 'task');
+                var checkbox = target.querySelector('.task__check');
+                var input = target.querySelector('.task__input');
+                if (input) {
+                    addTask(input.value, checkbox.checked);
+                    input.value = '';
+                    renderTaskList(data);
+                }
+            }
+        }
+
+        function clearInputFieldHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__clear')) {
+                target = getParentByClassName(target, 'task');
+                var input = target.querySelector('.task__input');
                 input.value = '';
-                renderField(data);
             }
         }
-        if(target.classList.contains('task__clear')) {
-            while (!target.classList.contains('task')) {
-                target = target.parentNode;
-            }
-            var input = target.querySelector('.task__input');
-            input.value = '';
-        }
-    });
-    // Сохраняю состояние на чекбоксах
-    field.addEventListener('click', function (evt) {
-        var target = evt.target;
-        if (target.classList.contains('task__check')) {
-            while (!target.classList.contains('task')) {
-                target = target.parentNode;
-            }
-            var checkbox = target.querySelector('.task__check');
-            var input = target.querySelector('.task__input');
-            editTask(target.id, input.value, checkbox.checked);
-            renderField(data);
-        }
-    });
 
-    // Рисую стандарные значения при потере фокуса, делегирование на невсплывающе событитие ^_^
-    field.addEventListener('blur', function (evt) {
-        var target = evt.target;
-        if (target.classList.contains('task__input')) {
-            function renderWrap() {
-                renderField(data);
+        //FUNCTIONS
+        function getTaskNode(taskData) {
+            var task = taskTemplate.cloneNode(true);
+            task.id = taskData.id;
+            var checkbox = task.querySelector('.task__check');
+            var text = task.querySelector('.task__input');
+            if (taskData.checked) {
+                checkbox.checked = true;
             }
-            // Задержка, чтобы успеть сохранить в модель значения при клике по кнопкам, т.к. событие потери фокуса всегда первым происходит
-            setTimeout(renderWrap, 100);
+            if (taskData.text) {
+                text.value = taskData.text;
+            }
+            return task;
         }
-    }, true);
 
+        function getCheckedTasks(arr) {
+            return arr.filter(function (item) {
+                return item.checked;
+            })
+        }
+
+        function getNotCheckedTasks(arr) {
+            return arr.filter(function (item) {
+                return !item.checked;
+            })
+        }
+
+        function renderTasks(tasksData) {
+            var fragment = document.createDocumentFragment();
+            tasksData.forEach(function (item) {
+                fragment.appendChild(getTaskNode(item));
+            });
+            taskList.appendChild(fragment);
+        }
+
+        function getFilter() {
+            var btns = document.querySelectorAll('input[type=radio]');
+            var id;
+            [].forEach.call(btns, function (item) {
+                if (item.checked) id = item.id;
+            });
+            return id;
+        }
+
+        function getFilteredTasks(allTasks, nameFilter) {
+            allTasks = allTasks.slice('');
+            switch (nameFilter) {
+                case 'all':
+                    return allTasks;
+                case 'complete':
+                    return getCheckedTasks(allTasks);
+                case 'active':
+                    return getNotCheckedTasks(allTasks);
+            }
+        }
+
+        function renderTaskList(data) {
+            taskList.innerHTML = '';
+            var filterName = getFilter();
+            var filteredTasks = getFilteredTasks(data, filterName);
+            console.log('filteredTasks',filteredTasks);
+            renderTasks(filteredTasks);
+        }
+
+        function deleteTask(id) {
+            var newDataArray = data.filter(function (item) {
+                return item.id !== +id;
+            });
+            data = newDataArray;
+        }
+
+        function editTask(id, text, checked) {
+            data.forEach(function (item) {
+                if (item.id === +id) {
+                    item.text = text;
+                    item.checked = checked;
+                }
+            })
+        }
+
+        function addTask(text, checked) {
+            data.push({id: Date.now(), text: text, checked: checked});
+        }
+
+        function getParentByClassName(nodeElement, className) {
+            while (!nodeElement.classList.contains(className)) {
+                nodeElement = nodeElement.parentNode;
+            }
+            return nodeElement;
+        }
+
+        function checkTaskHandler(evt) {
+            var target = evt.target;
+            if (target.classList.contains('task__check')) {
+                target = getParentByClassName(target, 'task');
+                var checkbox = target.querySelector('.task__check');
+                var input = target.querySelector('.task__input');
+                editTask(target.id, input.value, checkbox.checked);
+                renderTaskList(data);
+            }
+        }
+
+        function getTaskTemplate() {
+            var template = document.querySelector('template');
+            // Если нет поддержки браузером шаблон берем из DOMa
+            if ('content' in template) {
+                return template.content.firstElementChild;
+            } else {
+                return template.firstElementChild;
+            }
+        }
+
+        renderTaskList(data);
+    })()
 </script>
 </body>
 </html>
