@@ -44,8 +44,6 @@
             visibility: hidden;
         }
 
-
-
     </style>
 </head>
 <body>
@@ -55,9 +53,9 @@
 <div class="task__adder">
     <div class="task">
         <input style="visibility: hidden" type="checkbox" class="task__check">
-        <input type="text" class="task__input">
-        <button class="task__add">V</button>
-        <button class="task__clear">X</button>
+        <input type="text" class="adder task__input">
+        <button class="adder task__add">V</button>
+        <button class="adder task__clear">X</button>
     </div>
 </div>
 <div class="task__filter">
@@ -83,14 +81,11 @@
         var data = [{id: 1, text: 'купить хлеб', checked: true},
             {id: 2, text: 'покрасить небо', checked: false},
             {id: 3, text: 'съесть французских булок', checked: true}];
-
-        renderTaskList(data);
+        var addBlock = adder.querySelector('.task');
 
         onDelegatingByClassName('click', taskList, 'task__check', checkTask);
 
         onDelegatingByClassName('click', taskList, 'task__remove', removeTask);
-
-        onDelegatingByClassName('blur', taskList, 'task__input', revertValueTaskOfBlur, true);
 
         onDelegatingByClassName('click', taskList, 'task__save', saveEditingTask);
 
@@ -98,18 +93,17 @@
 
         onDelegatingByClassName('focus', adder, 'task__input', addClassFocus, true);
 
-        onDelegatingByClassName('blur', adder, 'task__input', removeClassFocus, true);
-
         onDelegatingByClassName('click', taskFilter, 'task__filter-control', showFilteredTask);
 
         onDelegatingByClassName('click', adder, 'task__clear', clearInputField);
 
         onDelegatingByClassName('click', adder, 'task__add', addNewTask);
 
+        document.body.addEventListener('click', removeClassFocusHandler);
+
         // HANDLERS
 
         function removeTask() {
-            debugger;
             var parent = getParentByClassName(this, 'task');
             deleteTask(parent.id);
             renderTaskList(data);
@@ -123,18 +117,15 @@
             renderTaskList(data);
         }
 
-        function revertValueTaskOfBlur() {
-            setTimeout(function(){renderTaskList(data);}, 150);
-        }
-
         function addClassFocus() {
             var parent = getParentByClassName(this, 'task');
             parent.classList.add('task--focused');
         }
 
-        function removeClassFocus() {
-                var parent = getParentByClassName(this, 'task');
-                setTimeout(function(){parent.classList.remove('task--focused')}, 150);
+        function removeClassFocusHandler(evt) {
+            if(!evt.target.classList.contains('adder')){
+                addBlock.classList.remove('task--focused');
+            }
         }
 
         function showFilteredTask() {
@@ -228,7 +219,6 @@
             taskList.innerHTML = '';
             var filterName = getFilter();
             var filteredTasks = getFilteredTasks(data, filterName);
-            console.log('filteredTasks',filteredTasks);
             renderTasks(filteredTasks);
         }
 
@@ -275,6 +265,8 @@
                 return template.firstElementChild;
             }
         }
+
+        renderTaskList(data);
 
 
     })()
